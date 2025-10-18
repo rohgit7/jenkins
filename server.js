@@ -11,7 +11,5 @@ app.get('/api/message', (req, res) => {
   res.json({ message: 'Hello from Express backend 👋' });
 });
 
-// Start server
-app.listen(PORT, () => {
-  console.log(`Server running at http://localhost:${PORT}`);
-});
+
+app.listen(3000, '0.0.0.0', () => console.log('Server running'));
