@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Express Jenkins Demo</title>
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 Express + Jenkins Demo</h1>
+    <p>This is a simple frontend served from Express.</p>
+    <button id="fetchBtn">Fetch Message</button>
+    <p id="output"></p>
+  </div>
+
+  <script>
+    document.getElementById('fetchBtn').addEventListener('click', async () => {
+      const res = await fetch('/api/message');
+      const data = await res.json();
+      document.getElementById('output').textContent = data.message;
+    });
+  </script>
+</body>
+</html>
