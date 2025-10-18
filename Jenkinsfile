@@ -2,7 +2,6 @@ pipeline {
     agent any
 
     environment {
-        NODE_ENV = 'production'
         PORT = '3000'
         WORKSPACE_DIR = '/var/jenkins_home/workspace/marvelPipeline'
     }
@@ -15,8 +14,9 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Docker Image') {
             steps {
+<<<<<<< HEAD
                 echo 'Installing dependencies...'
                 sh '''
                 # Install Node.js if not present
@@ -60,6 +60,35 @@ pipeline {
                 nohup node server.js > app.log 2>&1 &
                 sleep 5
                 echo "Express app started on port $PORT"
+=======
+                echo 'Building Docker image for Express app...'
+                sh '''
+                cd $WORKSPACE_DIR
+                docker build -t my-express-app .
+                '''
+            }
+        }
+
+        stage('Deploy Docker Container') {
+            steps {
+                echo 'Deploying Express app container...'
+                sh '''
+                # Remove existing container if any
+                docker rm -f express_app || true
+
+                # Run new container with port mapping
+                docker run -d -p 3000:3000 --name express_app my-express-app
+                '''
+            }
+        }
+
+        stage('Verify Deployment') {
+            steps {
+                echo 'Checking if Express app is running...'
+                sh '''
+                docker ps | grep express_app
+                curl -s http://localhost:3000 || echo "App not responding"
+>>>>>>> c30cb92 (Dockerfile)
                 '''
             }
         }
@@ -67,7 +96,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline executed successfully!'
+            echo '✅ Pipeline executed successfully! Express app is live at http://localhost:3000'
         }
         failure {
             echo '❌ Pipeline failed. Check logs for details.'
