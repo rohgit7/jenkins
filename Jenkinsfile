@@ -1,10 +1,6 @@
 pipeline {
     agent any
 
-    tools {
-        nodejs 'nodejs' // Ensure Node.js is available (configure this in Jenkins global tools)
-    }
-
     environment {
         NODE_ENV = 'production'
         PORT = '3000'
