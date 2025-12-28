@@ -2,61 +2,64 @@ pipeline {
     agent any
 
     environment {
-        PORT = '3000'
-        // Use double backslashes for Windows paths in Groovy strings
-        WORKSPACE_DIR = "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\marvelPipeline"
+        IMAGE_NAME = "my-express-app"
+        CONTAINER_NAME = "express_app"
+        PORT = "3000"
     }
 
     stages {
         stage('Checkout') {
             steps {
-                echo 'Cloning repository...'
-                git branch: 'main', url: 'https://github.com/rohgit7/jenkins.git'
+                echo 'Checking out source code...'
+                // This fetches the code from the repo configured in the Jenkins Job
+                checkout scm
+            }
+        }
+
+        stage('Install Dependencies') {
+            steps {
+                echo 'Installing Node dependencies locally (Optional/Sanity Check)...'
+                // This ensures the package.json is valid before building the image
+                bat 'npm install'
             }
         }
 
         stage('Build Docker Image') {
             steps {
-                echo 'Building Docker image for Express app...'
-                // Use 'bat' for Windows Command Prompt
+                echo "Building Image: ${IMAGE_NAME}..."
+                bat "docker build -t %IMAGE_NAME% ."
+            }
+        }
+
+        stage('Deploy Container') {
+            steps {
+                echo "Deploying Container: %CONTAINER_NAME%..."
                 bat """
-                    cd /d "%WORKSPACE_DIR%"
-                    docker build -t my-express-app .
+                    :: 1. Stop and remove existing container if it exists
+                    docker rm -f %CONTAINER_NAME% 2>nul || ver > nul
+                    
+                    :: 2. Run the new container
+                    docker run -d -p %PORT%:%PORT% --name %CONTAINER_NAME% %IMAGE_NAME%
                 """
             }
         }
 
-        stage('Deploy Docker Container') {
+        stage('Health Check') {
             steps {
-                echo 'Deploying Express app container...'
-                bat """
-                    :: Remove existing container if any (ignore error if it doesn't exist)
-                    docker rm -f express_app || ver > nul
-
-                    :: Run new container with port mapping
-                    docker run -d -p 3000:3000 --name express_app my-express-app
-                """
-            }
-        }
-
-        stage('Verify Deployment') {
-            steps {
-                echo 'Checking if Express app is running...'
-                bat """
-                    docker ps | findstr express_app
-                    :: Note: curl is available in modern Windows (Cmd/PowerShell)
-                    curl -s http://localhost:3000 || echo App not responding
-                """
+                echo 'Verifying if the application is reachable...'
+                // Gives the container 5 seconds to fully start up the Node process
+                bat "timeout /t 5"
+                bat "curl -s http://localhost:%PORT% || echo 'App is not responding yet'"
             }
         }
     }
 
     post {
         success {
-            echo '✅ Pipeline executed successfully! Express app is live at http://localhost:3000'
+            echo "✅ Deployment Successful! Access at: http://localhost:${PORT}"
         }
         failure {
-            echo '❌ Pipeline failed. Check logs for details.'
+            echo "❌ Pipeline failed. Check the console output for errors."
         }
     }
 }
