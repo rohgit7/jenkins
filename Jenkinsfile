@@ -47,8 +47,8 @@ pipeline {
         stage('Health Check') {
             steps {
                 echo 'Verifying if the application is reachable...'
-                // Gives the container 5 seconds to fully start up the Node process
-                bat "timeout /t 5"
+                // Use ping to create a 5-second delay (Windows alternative to sleep)
+                bat "ping -n 6 127.0.0.1 > nul"
                 bat "curl -s http://localhost:%PORT% || echo 'App is not responding yet'"
             }
         }
