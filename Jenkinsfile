@@ -3,7 +3,8 @@ pipeline {
 
     environment {
         PORT = '3000'
-        WORKSPACE_DIR = '/var/jenkins_home/workspace/marvelPipeline'
+        // Use double backslashes for Windows paths in Groovy strings
+        WORKSPACE_DIR = "C:\\ProgramData\\Jenkins\\.jenkins\\workspace\\marvelPipeline"
     }
 
     stages {
@@ -17,8 +18,9 @@ pipeline {
         stage('Build Docker Image') {
             steps {
                 echo 'Building Docker image for Express app...'
-                sh """
-                    cd $WORKSPACE_DIR
+                // Use 'bat' for Windows Command Prompt
+                bat """
+                    cd /d "%WORKSPACE_DIR%"
                     docker build -t my-express-app .
                 """
             }
@@ -27,11 +29,11 @@ pipeline {
         stage('Deploy Docker Container') {
             steps {
                 echo 'Deploying Express app container...'
-                sh """
-                    # Remove existing container if any
-                    docker rm -f express_app || true
+                bat """
+                    :: Remove existing container if any (ignore error if it doesn't exist)
+                    docker rm -f express_app || ver > nul
 
-                    # Run new container with port mapping
+                    :: Run new container with port mapping
                     docker run -d -p 3000:3000 --name express_app my-express-app
                 """
             }
@@ -40,9 +42,10 @@ pipeline {
         stage('Verify Deployment') {
             steps {
                 echo 'Checking if Express app is running...'
-                sh """
-                    docker ps | grep express_app
-                    curl -s http://localhost:3000 || echo "App not responding"
+                bat """
+                    docker ps | findstr express_app
+                    :: Note: curl is available in modern Windows (Cmd/PowerShell)
+                    curl -s http://localhost:3000 || echo App not responding
                 """
             }
         }
